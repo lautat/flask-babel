@@ -12,8 +12,8 @@ import os
 
 from datetime import datetime
 from contextlib import contextmanager
-from flask import current_app, request
-from flask.ctx import has_request_context
+from flask import current_app
+from flask.globals import _app_ctx_stack, _request_ctx_stack
 from flask.helpers import locked_cached_property
 from babel import dates, numbers, support, Locale
 from pytz import timezone, UTC
@@ -661,11 +661,15 @@ class Domain(object):
 
 
 def _get_current_context():
-    if has_request_context():
-        return request
+    request_ctx = _request_ctx_stack.top
 
-    if current_app:
-        return current_app
+    if request_ctx is not None:
+        return request_ctx
+
+    app_ctx = _app_ctx_stack.top
+
+    if app_ctx is not None:
+        return app_ctx
 
 
 def get_domain():
